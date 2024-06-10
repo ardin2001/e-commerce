@@ -1,6 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-import { Login } from "@/app/lib/firebase/users";
 
 export const authOptions: NextAuthOptions = {
   session: {
