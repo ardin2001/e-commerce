@@ -1,90 +1,234 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GetUserById, DeleteUser, UpdateUser } from "@/app/lib/firebase/users";
 import {
-  GetUserById,
-  DeleteUser,
-  UpdateUser,
-} from "@/app/lib/firebase/users";
+  notImplemented,
+  notFound,
+  internalServerError,
+} from "../../statusCode";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { status, data } = await GetUserById(params.id);
-  if (status) {
-    return NextResponse.json({
-      status: true,
-      statusCode: 200,
-      message: "Successfully get detail user data",
-      data: data,
-    });
+  try {
+    const { status, statusCode, data } = await GetUserById(params.id);
+    if (status) {
+      return NextResponse.json(
+        {
+          status,
+          statusCode,
+          message: "Successfully get detail user data",
+          data: data,
+        },
+        {
+          status: statusCode,
+        }
+      );
+    }
+    return NextResponse.json(
+      {
+        status: false,
+        statusCode: notFound,
+        message: "Failed get detail user data",
+        data,
+      },
+      {
+        status: statusCode,
+      }
+    );
+  } catch {
+    return NextResponse.json(
+      {
+        status: false,
+        statusCode: internalServerError,
+        message: "Internal Server Error",
+        data: null,
+      },
+      {
+        status: internalServerError,
+      }
+    );
   }
-  return NextResponse.json({
-    status: false,
-    statusCode: 401,
-    message: "Failed get detail user data",
-    data,
-  });
 }
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const inputUser = await req.json();
-  const { status, statusCode }: any = await UpdateUser({
-    id: params.id,
-    dataUpdate: inputUser,
-  });
-  if (status) {
-    return NextResponse.json({
-      status,
-      statusCode,
-      message: "Successfully put user data",
-      data: null,
-    });
+  try {
+    const { status, statusCode } = await GetUserById(params.id);
+    if (status) {
+      try {
+        const inputUser = await req.json();
+        const { status, statusCode }: any = await UpdateUser({
+          id: params.id,
+          dataUpdate: inputUser,
+        });
+        if (status) {
+          return NextResponse.json(
+            {
+              status,
+              statusCode,
+              message: "Successfully put user data",
+              data: null,
+            },
+            {
+              status: statusCode,
+            }
+          );
+        } else {
+          return NextResponse.json(
+            {
+              status,
+              statusCode,
+              message: "Failed update user data",
+              data: null,
+            },
+            {
+              status: statusCode,
+            }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          {
+            status: false,
+            statusCode: internalServerError,
+            message: "Internal Server Error",
+            data: null,
+          },
+          {
+            status: internalServerError,
+          }
+        );
+      }
+    } else {
+      if (statusCode == notFound) {
+        return NextResponse.json(
+          {
+            status,
+            statusCode,
+            message: "User not found",
+            data: null,
+          },
+          {
+            status: statusCode,
+          }
+        );
+      } else if (statusCode == notImplemented) {
+        return NextResponse.json(
+          {
+            status,
+            statusCode,
+            message: "Error Server API",
+            data: null,
+          },
+          {
+            status: statusCode,
+          }
+        );
+      }
+    }
+  } catch {
+    return NextResponse.json(
+      {
+        status: false,
+        statusCode: internalServerError,
+        message: "Internal Server Error",
+        data: null,
+      },
+      {
+        status: internalServerError,
+      }
+    );
   }
-
-  if (statusCode == 401) {
-    return NextResponse.json({
-      status,
-      statusCode,
-      message: "User not found",
-      data: null,
-    });
-  }
-
-  return NextResponse.json({
-    status,
-    statusCode,
-    message: "Failed update user data",
-    data: null,
-  });
 }
 
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { status, statusCode } = await DeleteUser(params.id);
-  if (status) {
-    return NextResponse.json({
-      status,
-      statusCode,
-      message: "Successfully delete user data",
-      data: null,
-    });
+  try {
+    const { status, statusCode } = await GetUserById(params.id);
+    if (status) {
+      try {
+        const { status, statusCode } = await DeleteUser(params.id);
+        if (status) {
+          return NextResponse.json(
+            {
+              status,
+              statusCode,
+              message: "Successfully delete user data",
+              data: null,
+            },
+            {
+              status: statusCode,
+            }
+          );
+        } else {
+          return NextResponse.json(
+            {
+              status,
+              statusCode,
+              message: "Error Server API",
+              data: null,
+            },
+            {
+              status: statusCode,
+            }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          {
+            status: false,
+            statusCode: internalServerError,
+            message: "Internal Server Error",
+            data: null,
+          },
+          {
+            status: internalServerError,
+          }
+        );
+      }
+    } else {
+      if (statusCode == notFound) {
+        return NextResponse.json(
+          {
+            status,
+            statusCode,
+            message: "User not found",
+            data: null,
+          },
+          {
+            status: statusCode,
+          }
+        );
+      } else if (statusCode == notImplemented) {
+        return NextResponse.json(
+          {
+            status,
+            statusCode,
+            message: "Error Server API",
+            data: null,
+          },
+          {
+            status: statusCode,
+          }
+        );
+      }
+    }
+  } catch {
+    return NextResponse.json(
+      {
+        status: false,
+        statusCode: internalServerError,
+        message: "Internal Server Error",
+        data: null,
+      },
+      {
+        status: internalServerError,
+      }
+    );
   }
-  if (statusCode == 401) {
-    return NextResponse.json({
-      status,
-      statusCode,
-      message: "User not found",
-      data: null,
-    });
-  }
-  return NextResponse.json({
-    status,
-    statusCode,
-    message: "Error Server API",
-    data: null,
-  });
 }
