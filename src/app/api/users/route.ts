@@ -6,6 +6,7 @@ import {
   notImplemented,
   conflict,
 } from "../statusCode";
+import validator from "./validator";
 
 export async function GET(req: NextRequest) {
   try {
@@ -69,6 +70,21 @@ export async function POST(req: NextRequest) {
     const inputUser = await req.json();
     inputUser.role = "user";
     inputUser.verified = false;
+
+    const result = validator(inputUser);
+    if(!result.status){
+      return NextResponse.json(
+        {
+          status: false,
+          statusCode: notFound,
+          message: result.message,
+          data: null,
+        },
+        {
+          status: notFound,
+        }
+      );
+    }
 
     const { status, statusCode }: any = await GetUserBy(inputUser);
     if (status) {
